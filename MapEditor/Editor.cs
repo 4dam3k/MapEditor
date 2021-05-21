@@ -21,17 +21,5 @@ namespace MapEditor
     {
         public static Dictionary<string, Map> maps = new Dictionary<string, Map>();
         public static Dictionary<string, PlayerEditorStatus> playerEditors = new Dictionary<string, PlayerEditorStatus>();
-        public static void BringObject(CommandSender sender)
-        {
-            if (!playerEditors.ContainsKey(sender.SenderId))
-                return;
-            var obj = playerEditors[sender.SenderId].selectedObject;
-            if (obj == null)
-                return;
-
-        }
-
-
-
     }
 }

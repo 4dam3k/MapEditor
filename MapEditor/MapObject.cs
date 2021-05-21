@@ -87,9 +87,11 @@ namespace MapEditor
                     NetworkServer.Spawn(orginalPrefab);
                     break;
                 case MapCustomObject co:
-                    Schematic.UnloadSchematic("SCHEM" + co.CustomObjectName + ObjectID);
-                    attachedCustomObject = Schematic.LoadSchematic2("SCHEM" + co.CustomObjectName + ObjectID, Path.Combine(MainClass.pluginDir, "schematics", "schematic-" + co.CustomObjectName + ".json"), orginalPrefab.transform.position, orginalPrefab.transform.eulerAngles, orginalPrefab.transform.localScale, ItemType.None, true);
-                    attachedCustomObject.LinkedObject = this;
+                    if (File.Exists(Path.Combine(MainClass.pluginDir, "schematics", "schematic-" + co.CustomObjectName + ".json")))
+                    {
+                        attachedCustomObject = Schematic.LoadSchematic2("SCHEM" + co.CustomObjectName + ObjectID, Path.Combine(MainClass.pluginDir, "schematics", "schematic-" + co.CustomObjectName + ".json"), this.transform.position, this.transform.eulerAngles, Vector3.zero);
+                        attachedCustomObject.LinkedObject = this;
+                    }
                     break;
             }
             Object.Scale.SetVector(orginalPrefab.transform.localScale);
@@ -191,14 +193,6 @@ namespace MapEditor
                 orginalPrefab.transform.position = t.transform.TransformPoint(Object.Position.Vector);
                 if (Object.Rotation.Vector != Vector3.zero)
                     orginalPrefab.transform.rotation = Quaternion.Euler(t.transform.TransformDirection(Object.Rotation.Vector));
-                if (Object is MapCustomObject co2)
-                {
-                    if (File.Exists(Path.Combine(MainClass.pluginDir, "schematics", "schematic-" + co2.CustomObjectName + ".json")))
-                    {
-                        attachedCustomObject = Schematic.LoadSchematic2("SCHEM" + co2.CustomObjectName + ObjectID, Path.Combine(MainClass.pluginDir, "schematics", "schematic-" + co2.CustomObjectName + ".json"), orginalPrefab.transform.position, orginalPrefab.transform.eulerAngles, orginalPrefab.transform.localScale, ItemType.None, true);
-                        attachedCustomObject.LinkedObject = this;
-                    }
-                }
             }
             else
             {
@@ -236,14 +230,6 @@ namespace MapEditor
                 orginalPrefab.transform.position = Object.Position.Vector;
                 if (Object.Rotation.Vector != Vector3.zero)
                     orginalPrefab.transform.rotation = Quaternion.Euler(Object.Rotation.Vector);
-                if (Object is MapCustomObject co2)
-                {
-                    if (File.Exists(Path.Combine(MainClass.pluginDir, "schematics", "schematic-" + co2.CustomObjectName + ".json")))
-                    {
-                        attachedCustomObject = Schematic.LoadSchematic2("SCHEM" + co2.CustomObjectName + ObjectID, Path.Combine(MainClass.pluginDir, "schematics", "schematic-" + co2.CustomObjectName + ".json"), orginalPrefab.transform.position, orginalPrefab.transform.eulerAngles, orginalPrefab.transform.localScale, ItemType.None, true);
-                        attachedCustomObject.LinkedObject = this;
-                    }
-                }
             }
             orginalPrefab.transform.parent = this.transform;
             if (Object.Scale.Vector != Vector3.zero)

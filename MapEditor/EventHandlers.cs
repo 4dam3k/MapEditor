@@ -105,6 +105,7 @@ namespace MapEditor
                                         map9.Load();
                                         Editor.maps.Add(ev.Arguments[1], map9);
                                         ev.Sender.RemoteAdminMessage($"Map {ev.Arguments[1]} loaded.");
+                                        return;
                                     }
                                 }
                                 else
