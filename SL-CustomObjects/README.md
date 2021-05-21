@@ -22,14 +22,14 @@
  
  ![alt text](https://cdn.discordapp.com/attachments/686969243782086702/828577303519952906/unknown.png)
  
- On your server put that schematic file in Exiled/Plugins/SLCustomObjects/schematics and then on server type
+ On your server put that schematic file in Exiled/Plugins/MapEditor/schematics and then on server type
  
-` schematic load <name> ( name without schematic- )`
+` mapeditor setcustomobject <schematicName> ( without schematic- )`
  
  
  If you wan to use that plugin in your one then add that plugin as reference and check
  
-` SLCustomObjects.Schematic class`
+` MapEditor.Schematic class`
  
  Example schematics ingame:
  ![alt text](https://cdn.discordapp.com/attachments/675862006057664513/828568118296313867/unknown.png)
