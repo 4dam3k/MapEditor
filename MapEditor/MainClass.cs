@@ -1,6 +1,8 @@
 ﻿using Exiled.API.Features;
 using Hints;
 using Interactables.Interobjects.DoorUtils;
+using MapEditor.Models;
+using MapEditor.Objects;
 using MapGeneration;
 using MEC;
 using Mirror;
@@ -14,7 +16,7 @@ using UnityEngine;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using static MapEditor.Editor;
-using static MapEditor.MapEditorModels;
+
 
 namespace MapEditor
 {
@@ -33,15 +35,18 @@ namespace MapEditor
         public static GameObject doorHCZobj;
         public static GameObject doorENTobj;
 
+        public static Schematic schem;
+
         public override void OnEnabled()
         {
+            schem = new Schematic();
             Log.Info("MapEditor loaded.");
             workstationObj = NetworkManager.singleton.spawnPrefabs.Find(p => p.gameObject.name.ToUpper().Contains("WORK"));
 
 
             Exiled.Events.Handlers.Server.WaitingForPlayers += Server_WaitingForPlayers;
             Exiled.Events.Handlers.Server.RestartingRound += EventHandlers.RoundRestartEvent;
-            Exiled.Events.Handlers.Player.Left += EventHandlers.PlayerLeaveEvent;
+            Exiled.Events.Handlers.Player.Destroying += EventHandlers.PlayerLeaveEvent;
             Exiled.Events.Handlers.Server.SendingRemoteAdminCommand += EventHandlers.RemoteAdminCommandEvent;
             string appData = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData);
             pluginDir = Path.Combine(appData, "EXILED", "Plugins", "MapEditor");
@@ -49,6 +54,9 @@ namespace MapEditor
                 Directory.CreateDirectory(pluginDir);
             if (!Directory.Exists(Path.Combine(pluginDir, "maps")))
                 Directory.CreateDirectory(Path.Combine(pluginDir, "maps"));
+            if (!Directory.Exists(Path.Combine(pluginDir, "schematics")))
+                Directory.CreateDirectory(Path.Combine(pluginDir, "schematics"));
+            Exiled.Events.Handlers.Player.PickingUpItem += EventHandlers.PickupItem;
             Timing.RunCoroutine(InfinityLoop());
 
         }
@@ -81,10 +89,7 @@ namespace MapEditor
                 var map = deserializer.Deserialize<Map>(yml);
                 if (map.LoadOnStart.Contains(Server.Port))
                 {
-                    foreach (MapObject obj in map.objects)
-                    {
-                        obj.Load(map);
-                    }
+                    map.Load();
                     maps.Add(Name, map);
                 }
             }
@@ -104,25 +109,52 @@ namespace MapEditor
                         {
                             if (Editor.maps.ContainsKey(ed.Value.mapName))
                             {
-                                string line = "";
+                                List<string> lines = new List<string>()
+                                {
+                                    "<color=red>|</color> MapEditor <color=red>|</color>",
+                                    "",
+                                    "",
+                                    "",
+                                    "",
+                                    "",
+                                    "",
+                                    "",
+                                    ""
+                                };
                                 if (ed.Value.selectedObject != null)
                                 {
-                                    line = string.Concat(
-                                        ed.Value.isWorkstation ? "<size=30>SelectedObject ID: " + ed.Value.selectedObject.name.Split('|')[1] + " MAP: " + ed.Value.selectedObject.name.Split('|')[0] + "</size>" : "<size=30>Object Name: " + ed.Value.selectedObject.name + "</size>",
-                                        System.Environment.NewLine,
-                                        "<size=30>Position</size> <size=30>X: " + (int)ed.Value.selectedObject.transform.position.x + " Y: " + (int)ed.Value.selectedObject.transform.position.y + " Z: " + (int)ed.Value.selectedObject.transform.position.z + "</size>",
-                                        Environment.NewLine,
-                                        "<size=30>Rotation</size> <size=30>X: " + (int)ed.Value.selectedObject.transform.rotation.x + " Y: " + (int)ed.Value.selectedObject.transform.rotation.y + " Z: " + (int)ed.Value.selectedObject.transform.rotation.z + "</size>",
-                                        Environment.NewLine,
-                                        "<size=30>Scale</size> <size=30>X: " + (int)ed.Value.selectedObject.transform.localScale.x + " Y: " + (int)ed.Value.selectedObject.transform.localScale.y + " Z: " + (int)ed.Value.selectedObject.transform.localScale.z + "</size>"
-                                   );
+                                    lines[1] = $"<size=30>Object type: <color=yellow>{ed.Value.selectedObject.Object.GetType().Name}</color> | Room: <color=yellow>{ed.Value.selectedObject.Object.Room}</color> | ID: <color=yellow>{ed.Value.selectedObject.ObjectID}</color></size>";
+                                    switch (ed.Value.selectedObject.Object)
+                                    {
+                                        case MapClassSpawn mps:
+                                            lines[2] = $"<size=30>Role: <color=yellow>{mps.Class}</color></size>";
+                                            break;
+                                        case MapCustomObject mps:
+                                            lines[2] = $"<size=30>Object name: <color=yellow>{mps.CustomObjectName}</color></size>";
+                                            break;
+                                        case MapDoor mps:
+                                            lines[2] = $"<size=30>Door type: <color=yellow>{mps.DoorType}</color> | IsOpen: {(mps.IsOpen ? "<color=green>YES</color>" : "<color=red>NO</color>")} | IsLocked: {(mps.IsLocked ? "<color=green>YES</color>" : "<color=red>NO</color>")}</size>";
+                                            lines[3] = $"<size=30>Health: <color=yellow>{mps.Health}</color>/<color=yellow>{mps.MaxHealth}</color></size>";
+                                            lines[4] = $"<size=30>Keycard perms: <color=yellow>{mps.KeycardPermission}</color></size>";
+                                            lines[5] = $"<size=30>Ignore damagas: <color=yellow>{mps.IgnoredDamageSources}</color></size>";
+                                            break;
+                                        case MapItemSpawn mps:
+                                            lines[2] = $"<size=30>Item type: <color=yellow>{mps.Item}</color></size>";
+                                            break;
+                                    }
+                                    var pos = ed.Value.selectedObject.orginalPrefab.transform.position;
+                                    var rot = ed.Value.selectedObject.orginalPrefab.transform.eulerAngles;
+                                    var scale = ed.Value.selectedObject.orginalPrefab.transform.localScale;
+                                    lines[8] = $"<size=20>Position {string.Format("X: <color=yellow>{0:F3}</color> Y: <color=yellow>{1:F3}</color> Z: <color=yellow>{2:F3}</color>", pos.x, pos.y, pos.z)} | Rotation {string.Format("X: <color=yellow>{0:F3}</color> Y: <color=yellow>{1:F3}</color> Z: <color=yellow>{2:F3}</color>", rot.x, rot.y, rot.z)} | Scale {string.Format("X: <color=yellow>{0:F3}</color> Y: <color=yellow>{1:F3}</color> Z: <color=yellow>{2:F3}</color>", scale.x, scale.y, scale.z)}</size>";
+
                                 }
                                 player.ReferenceHub.hints.Show(new TextHint(string.Concat(
-                                                                        System.Environment.NewLine,
-                                    System.Environment.NewLine,
-                                    " <color=red>|</color> MapEditor <color=red>|</color> ",
-                                    System.Environment.NewLine,
-                                    line
+                                    Environment.NewLine,
+                                    Environment.NewLine,
+                                    Environment.NewLine,
+                                    Environment.NewLine,
+                                    Environment.NewLine,
+                                    string.Join("\n", lines)
                                 ), new HintParameter[]
                                 {
                                     new StringHintParameter("")
@@ -143,46 +175,5 @@ namespace MapEditor
             }
         }
 
-        public static GameObject GetWorkStationObject(ObjectType type, DoorSettings sett)
-        {
-            GameObject bench = null;
-            switch (type)
-            {
-                case ObjectType.DoorEZ:
-                    bench = UnityEngine.Object.Instantiate(doorENTobj);
-                    if (sett.Locked)
-                        bench.GetComponent<DoorVariant>().ServerChangeLock(DoorLockReason.AdminCommand, true);
-                    bench.GetComponent<DoorVariant>().RequiredPermissions.RequiredPermissions = sett.Permissions;
-                    break;
-                case ObjectType.DoorHCZ:
-                    bench = UnityEngine.Object.Instantiate(doorHCZobj);
-                    if (sett.Locked)
-                        bench.GetComponent<DoorVariant>().ServerChangeLock(DoorLockReason.AdminCommand, true);
-                    bench.GetComponent<DoorVariant>().RequiredPermissions.RequiredPermissions = sett.Permissions;
-                    break;
-                case ObjectType.DoorLCZ:
-                    bench = UnityEngine.Object.Instantiate(doorLCZobj);
-                    if (sett.Locked)
-                        bench.GetComponent<DoorVariant>().ServerChangeLock(DoorLockReason.AdminCommand, true);
-                    bench.GetComponent<DoorVariant>().RequiredPermissions.RequiredPermissions = sett.Permissions;
-                    break;
-                case ObjectType.WorkStation:
-                    bench = UnityEngine.Object.Instantiate(workstationObj);
-                    bench.GetComponent<WorkStation>().NetworkisTabletConnected = false;
-                    bench.GetComponent<WorkStation>().Network_playerConnected = null;
-                    break;
-            }
-            return bench;
-        }
-
-        public static Vector3 Vector3To3(Vector3 v)
-        {
-            return new Vector3(v.x, v.y, v.z);
-        }
-
-        public static Vector3 Vec3ToVector3(Vector3 v)
-        {
-            return new Vector3(v.x, v.y, v.z);
-        }
     }
 }
