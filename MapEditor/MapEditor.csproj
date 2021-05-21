@@ -126,7 +126,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /y ".\MapEditor.dll" "..\..\..\Output"
-xcopy /y ".\YamlDotNet.dll" "..\..\..\Output"</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>
