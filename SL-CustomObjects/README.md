@@ -1,18 +1,5 @@
 # SL-CustomObjects
 
- Download plugin:
- https://github.com/Killers0992/SL-CustomObjects/releases/download/1.0.0/SLCustomObjects.dll
- 
- Commands:
--  schematic list
--  schematic unload (name)
--  schematic load (name)
-
- NAME without schematic- just type Test if your file name is schematic-Test.json
- 
- Permission:
- - slcustomobjects
-
 
  If you want to create schematics you need to downlaod  or have:
 
