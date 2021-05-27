@@ -17,7 +17,7 @@ namespace MapEditor.Objects
         public bool IsLocked { get; set; } = false;
         public float Health { get; set; } = 80f;
         public float MaxHealth { get; set; } = 80f;
-        public KeycardPermissions KeycardPermission { get; set; } = KeycardPermissions.None;
+        public KeycardPermissions KeycardPermission { get; set; } = KeycardPermissions.ExitGates;
         public DoorDamageType IgnoredDamageSources { get; set; } = DoorDamageType.Weapon | DoorDamageType.Scp096;
         public CustomDoorType DoorType { get; set; } = CustomDoorType.EntranceZone;
         public RoomType Room { get; set; } = RoomType.Unknown;

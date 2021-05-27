@@ -25,8 +25,8 @@ namespace MapEditor
         public override string Author { get; } = "Killers0992";
         public override string Name { get; } = "MapEditor";
         public override string Prefix { get; } = "mapeditor";
-        public override System.Version RequiredExiledVersion { get; } = new System.Version(2, 1, 29);
-        public override System.Version Version { get; } = new System.Version(3,0,0);
+        public override System.Version RequiredExiledVersion { get; } = new System.Version(2, 10,0);
+        public override System.Version Version { get; } = new System.Version(3,0,1);
 
         public static string pluginDir;
 
